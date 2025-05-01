@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Exam Tutor Chatbot</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+      background: #f9f9f9;
+    }
+    #chatLog {
+      border: 1px solid #ccc;
+      padding: 10px;
+      height: 300px;
+      overflow-y: scroll;
+      background-color: #fff;
+      margin-bottom: 15px;
+    }
+    .user { font-weight: bold; color: #336699; }
+    .bot { font-weight: bold; color: #990000; }
+  </style>
+</head>
+<body>
+  <h2>COMM 136 Exam Tutor</h2>
+  <div id="chatLog"></div>
+  <form id="chatForm">
+    <input type="text" id="userInput" placeholder="Ask a question..." required style="width: 80%;" />
+    <button type="submit">Send</button>
+  </form>
+
+  <script>
+    const form = document.getElementById('chatForm');
+    const input = document.getElementById('userInput');
+    const chatLog = document.getElementById('chatLog');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const userMessage = input.value.trim();
+      if (!userMessage) return;
+
+      appendMessage('user', userMessage);
+      input.value = '';
+
+      appendMessage('bot', 'Thinking...');
+
+      try {
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: userMessage })
+        });
+
+        const data = await response.json();
+        updateLastBotMessage(data.reply);
+      } catch (error) {
+        updateLastBotMessage("Sorry, I couldn't reach the tutor bot.");
+        console.error(error);
+      }
+    });
+
+    function appendMessage(sender, message) {
+      const div = document.createElement('div');
+      div.innerHTML = `<span class="${sender}">${sender === 'user' ? 'You' : 'Bot'}:</span> ${message}`;
+      chatLog.appendChild(div);
+      chatLog.scrollTop = chatLog.scrollHeight;
+    }
+
+    function updateLastBotMessage(newText) {
+      const botMessages = chatLog.querySelectorAll('.bot');
+      if (botMessages.length) {
+        const last = botMessages[botMessages.length - 1].parentNode;
+        last.innerHTML = `<span class="bot">Bot:</span> ${newText}`;
+      }
+    }
+  </script>
+</body>
+</html>
